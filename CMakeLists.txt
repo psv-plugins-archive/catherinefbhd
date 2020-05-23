@@ -1,4 +1,4 @@
-# This file is part of Catherine Full Body 720p Patch for PSTV
+# This file is part of Catherine Full Body HD Patch
 # Copyright 2020 浅倉麗子
 
 # This program is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@ endif()
 
 include("$ENV{DOLCESDK}/share/dolce.cmake" REQUIRED)
 
-project(catherinefb720p LANGUAGES C)
+project(catherinefbhd LANGUAGES C)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -O3 -std=gnu99 -Wdouble-promotion -fsingle-precision-constant")
 

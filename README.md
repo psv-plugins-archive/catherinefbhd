@@ -1,8 +1,8 @@
-# Catherine Full Body 720p Patch for PSTV
+# Catherine Full Body HD Patch
 
-[Download binary](https://forum.devchroma.nl/index.php/topic,154.0.html) | [Source code](https://git.shotatoshounenwachigau.moe/vita/catherinefb720p/)
+[Download binary](https://forum.devchroma.nl/index.php/topic,154.0.html) | [Source code](https://git.shotatoshounenwachigau.moe/vita/catherinefbhd/)
 
-This patch changes the render and framebuffer resolutions of Catherine Full Body to 1280x720 on the PSTV.
+This patch changes the 3D render and framebuffer resolutions of Catherine Full Body on the Vita and PSTV to 1280x720. 1280x720 can be output to HDMI or USB ([udcd-uvc](https://github.com/xerpi/vita-udcd-uvc)), or Vita users can enjoy a supersampled image directly on the screen.
 
 ## Installation
 
@@ -10,18 +10,18 @@ This patch changes the render and framebuffer resolutions of Catherine Full Body
 2. Optionally install [froid_san's English patch](https://forum.devchroma.nl/index.php/topic,133.0.html).
 3. Install the latest version of [Sharpscale](https://forum.devchroma.nl/index.php/topic,112.0.html) and the configuration app.
 4. Turn on "Enable Full HD" in the Sharpscale configuration app.
-5. Install `catherinefb720.suprx` under `*PCSG01179` of your taiHEN config.
+5. Install `catherinefbhd.suprx` under `*PCSG01179` of your taiHEN config.
 
 ```
 *PCSG01179
-ur0:/tai/catherinefb720.suprx
+ur0:/tai/catherinefbhd.suprx
 ```
 
 ## Performance
 
-Overclocking is required for good performance. Framerate ranges from 20-30 FPS with 25-30 FPS in gameplay.
+Overclocking is required for good performance. Framerate is between 20-30 FPS with 25-30 FPS in gameplay.
 
-Video analysis from [InquisitionImplied](https://twitter.com/Yoyogames28): <https://www.youtube.com/watch?v=uzYS9XtIHiE>
+Video analysis from InquisitionImplied: <https://www.youtube.com/watch?v=uzYS9XtIHiE>
 
 ## Building
 
@@ -38,7 +38,8 @@ Use [git-format-patch](https://www.git-scm.com/docs/git-format-patch) or [git-re
 
 ## Credits
 
-- Testing and video analysis: InquisitionImplied
+- Testing and video analysis: [InquisitionImplied](https://twitter.com/Yoyogames28)
+- 3D buffer offsets: [VitaGrafix patchlist](https://github.com/Electry/VitaGrafixPatchlist)
 - Author: 浅倉麗子
 
 ## See more

@@ -1,5 +1,5 @@
 /*
-This file is part of Catherine Full Body 720p Patch for PSTV
+This file is part of Catherine Full Body HD Patch
 Copyright 2020 浅倉麗子
 
 This program is free software: you can redistribute it and/or modify
@@ -50,7 +50,7 @@ static void LOG(const char *fmt, ...) {
 	(void)fmt;
 
 	#ifdef LOG_PRINTF
-	sceClibPrintf("\033[0;36m[CatherineFB720p]\033[0m ");
+	sceClibPrintf("\033[0;36m[CatherineFBHD]\033[0m ");
 	va_list args;
 	va_start(args, fmt);
 	sceClibVprintf(fmt, args);
@@ -176,10 +176,10 @@ static int sceDisplaySetFrameBuf_hook(SceDisplayFrameBuf *fb, int mode) {
 		if (failed) {
 			fb->width = 960;
 			fb->height = 544;
-			fnblit_printf(0, 0, "Catherine Full Body 1280x720 render failed");
+			fnblit_printf(0, 0, "Catherine Full Body HD Patch failed: 1280x720");
 			fnblit_printf(0, 28, "Install Sharpscale and turn on 'Enable Full HD'");
 		} else {
-			fnblit_printf(0, 0, "Catherine Full Body 1280x720 render success");
+			fnblit_printf(0, 0, "Catherine Full Body HD Patch success: 1280x720");
 		}
 	}
 
@@ -220,14 +220,14 @@ int module_start(SceSize argc, const void *argv) { (void)argc; (void)argv;
 		goto fail;
 	}
 
-	// internal buffer
+	// 3D offscreen buffer
 
 	// mov.w r5, #1280 (width)
 	GLZ(INJECT_DATA(0, minfo.modid, 0, 0x000BBE98, "\x40\xF2\x00\x55", 4));
 	// mov.w r6, #720 (height)
 	GLZ(INJECT_DATA(1, minfo.modid, 0, 0x000BBEA0, "\x40\xF2\xD0\x26", 4));
 
-	// frame buffer
+	// main/UI buffer
 
 	// mov.w r0, #1280 (width)
 	GLZ(INJECT_DATA(2, minfo.modid, 0, 0x000BBE7A, "\x40\xF2\x00\x50", 4));
