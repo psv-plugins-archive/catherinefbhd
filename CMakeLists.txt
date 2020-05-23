@@ -33,6 +33,37 @@ if(LOG_PRINTF)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLOG_PRINTF")
 endif()
 
+# build font
+set(FONT_BASE "terminus-font-4.48")
+set(FONT_FILE "ter-u28b.bdf")
+set(SFN_FILE "font.sfn")
+set(SFN_C "${SFN_FILE}.c")
+set(SFN_OBJ "font_sfn")
+
+file(DOWNLOAD
+  "https://sourceforge.net/projects/terminus-font/files/terminus-font-4.48/terminus-font-4.48.tar.gz/download"
+  "${FONT_BASE}.tar.gz"
+  EXPECTED_HASH SHA256=34799c8dd5cec7db8016b4a615820dfb43b395575afbb24fc17ee19c869c94af
+)
+
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${SFN_FILE}"
+  COMMAND tar xzf "${FONT_BASE}.tar.gz" --strip-components=1 "${FONT_BASE}/${FONT_FILE}"
+  COMMAND bit2sfn
+    -r "Basic Latin" "${FONT_FILE}"
+    "${CMAKE_CURRENT_BINARY_DIR}/${SFN_FILE}"
+)
+
+add_custom_command(OUTPUT "${SFN_C}"
+  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${SFN_FILE}"
+  COMMAND xxd -i "${SFN_FILE}" "${SFN_C}"
+  COMMENT "Converting ${SFN_FILE} to ${SFN_C}"
+)
+
+add_library("${SFN_OBJ}" STATIC
+  "${SFN_C}"
+)
+
+# build module
 set(ELF "${PROJECT_NAME}.elf")
 set(SELF "${PROJECT_NAME}.suprx")
 
@@ -45,6 +76,8 @@ target_link_options("${ELF}"
 )
 
 target_link_libraries("${ELF}"
+  "${SFN_OBJ}"
+  fnblit
   gcc
   m
   SceLibKernel_stub

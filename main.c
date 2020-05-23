@@ -16,12 +16,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <math.h>
+#include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
+#include <psp2/display.h>
 #include <psp2/gxm.h>
 #include <psp2/kernel/clib.h>
 #include <psp2/kernel/modulemgr.h>
+#include <psp2/kernel/processmgr.h>
 #include <psp2/kernel/sysmem.h>
 #include <taihen.h>
+#include <fnblit.h>
+
+int vsnprintf(char *buf, SceSize n, const char *fmt, va_list arg) {
+	return sceClibVsnprintf(buf, n, fmt, arg);
+}
+
+extern char font_sfn[];
+extern int font_sfn_len;
 
 #define SCALE_W (1280.0 / 960.0)
 #define SCALE_H (720.0 / 540.0)
@@ -49,7 +61,7 @@ static void LOG(const char *fmt, ...) {
 #define N_INJECT 10
 static SceUID inject_id[N_INJECT];
 
-#define N_HOOK 6
+#define N_HOOK 7
 static SceUID hook_id[N_HOOK];
 static tai_hook_ref_t hook_ref[N_HOOK];
 
@@ -153,6 +165,37 @@ done:
 	return TAI_NEXT(scale_four2_hook, hook_ref[5], x, y, w, h, r0, r1);
 }
 
+static int sceDisplaySetFrameBuf_hook(SceDisplayFrameBuf *fb, int mode) {
+	static uint32_t start_time = 0;
+	static bool failed = false;
+
+	if (!start_time) { start_time = sceKernelGetProcessTimeLow(); }
+
+	if (fb && fb->base) {
+		fnblit_set_fb(fb->base, fb->pitch, fb->width, fb->height);
+		if (failed) {
+			fb->width = 960;
+			fb->height = 544;
+			fnblit_printf(0, 0, "Catherine Full Body 1280x720 render failed");
+			fnblit_printf(0, 28, "Install Sharpscale and turn on 'Enable Full HD'");
+		} else {
+			fnblit_printf(0, 0, "Catherine Full Body 1280x720 render success");
+		}
+	}
+
+	int ret = TAI_NEXT(sceDisplaySetFrameBuf_hook, hook_ref[6], fb, mode);
+
+	if (!failed && fb && fb->base && fb->pitch == 1280 && fb->width == 1280 && fb->height == 720) {
+		failed = ret < 0;
+	}
+
+	if (!failed && sceKernelGetProcessTimeLow() - start_time > 15 * 1000 * 1000) {
+		UNHOOK(6);
+	}
+
+	return ret;
+}
+
 static void startup(void) {
 	sceClibMemset(inject_id, 0xFF, sizeof(inject_id));
 	sceClibMemset(hook_id, 0xFF, sizeof(hook_id));
@@ -237,6 +280,11 @@ int module_start(SceSize argc, const void *argv) { (void)argc; (void)argv;
 	GLZ(HOOK_OFFSET(3, minfo.modid, 0x9c49c, scale_one2));
 	GLZ(HOOK_OFFSET(4, minfo.modid, 0x9c5bc, scale_four1));
 	GLZ(HOOK_OFFSET(5, minfo.modid, 0x9c688, scale_four2));
+
+	fnblit_set_font(font_sfn);
+	fnblit_set_fg(0xFFFFFFFF);
+	fnblit_set_bg(0x00000000);
+	GLZ(HOOK_IMPORT(6, "xrd758_psp2", 0x4FAACD11, 0x7A410B64, sceDisplaySetFrameBuf));
 
 	return SCE_KERNEL_START_SUCCESS;
 

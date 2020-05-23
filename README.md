@@ -25,7 +25,12 @@ Video analysis from [InquisitionImplied](https://twitter.com/Yoyogames28): <http
 
 ## Building
 
-DolceSDK and a [patched taihen.h](https://github.com/yifanlu/taiHEN/pull/87) are required for building.
+Dependencies:
+
+- [DolceSDK](https://forum.devchroma.nl/index.php/topic,129.0.html)
+- [fnblit and bit2sfn](https://git.shotatoshounenwachigau.moe/vita/fnblit)
+- [Terminus font](http://terminus-font.sourceforge.net)
+- [taiHEN](https://git.shotatoshounenwachigau.moe/vita/taihen)
 
 ## Contributing
 
