@@ -27,8 +27,6 @@ include("$ENV{DOLCESDK}/share/dolce.cmake" REQUIRED)
 
 project(catherinefbhd LANGUAGES C)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -O3 -std=gnu99 -Wdouble-promotion -fsingle-precision-constant")
-
 # build font
 set(FONT_BASE "terminus-font-4.48")
 set(FONT_FILE "ter-u28b.bdf")
@@ -65,6 +63,12 @@ set(SELF "${PROJECT_NAME}.suprx")
 
 add_executable("${ELF}"
   main.c
+)
+
+target_compile_options("${ELF}"
+  PRIVATE -O3 -std=c99
+  PRIVATE -Wall -Wextra -Wdouble-promotion -Wshadow -Wundef
+  PRIVATE -fsingle-precision-constant -fno-common
 )
 
 if(LOG_PRINTF)
