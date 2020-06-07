@@ -4,6 +4,8 @@
 
 This patch changes the 3D render and framebuffer resolutions of Catherine Full Body on the Vita and PSTV to 1280x720. 1280x720 can be output to HDMI or USB ([udcd-uvc](https://github.com/xerpi/vita-udcd-uvc)), or Vita users can enjoy a supersampled image directly on the screen.
 
+Preview images: [1](https://git.shotatoshounenwachigau.moe/vita/catherinefbhd/plain/preview1.png?h=assets) [2](https://git.shotatoshounenwachigau.moe/vita/catherinefbhd/plain/preview2.png?h=assets) [3](https://git.shotatoshounenwachigau.moe/vita/catherinefbhd/plain/preview3.png?h=assets) [4](https://git.shotatoshounenwachigau.moe/vita/catherinefbhd/plain/preview4.png?h=assets)
+
 ## Installation
 
 1. Install Catherine Full Body (PCSG01179) and update to 1.03.
