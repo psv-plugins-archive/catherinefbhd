@@ -35,9 +35,10 @@ int vsnprintf(char *buf, SceSize n, const char *fmt, va_list arg) {
 extern char font_sfn[];
 extern int font_sfn_len;
 
-#define SCALE_W (1280.0 / 960.0)
-#define SCALE_H (720.0 / 540.0)
-#define PARAMETER_BUFFER_SIZE (SCE_GXM_DEFAULT_PARAMETER_BUFFER_SIZE - 0x400000)
+#define CFB_MOD_NAME "xrd758_psp2"
+
+#define SCALE_X (1280.0 / 960.0)
+#define SCALE_Y (720.0 / 540.0)
 
 #define FEQF(a, b) (fabsf((a) - (b)) < 0.00005)
 
@@ -122,46 +123,44 @@ static SceUID sceKernelAllocMemBlock_hook(char *name, int type, int size, void *
 static int sceGxmInitialize_hook(SceGxmInitializeParams *params) {
 	LOG("parameter buffer reduced %d KB -> %d KB\n",
 		params->parameterBufferSize / 1024,
-		PARAMETER_BUFFER_SIZE / 1024);
-	params->parameterBufferSize = PARAMETER_BUFFER_SIZE;
+		(params->parameterBufferSize - 0x400000) / 1024);
+	params->parameterBufferSize -= 0x400000;
 	return TAI_NEXT(sceGxmInitialize_hook, hook_ref[1], params);
 }
 
-static int scale_one1_hook(int r0, int r1, int r2, int r3) {
-	*(float*)(r3 + 0x4) *= SCALE_W;
-	*(float*)(r3 + 0x8) *= SCALE_H;
+static int scale_one1_hook(int r0, int r1, int r2, float *r3) {
+	r3[1] *= SCALE_X;
+	r3[2] *= SCALE_Y;
 	return TAI_NEXT(scale_one1_hook, hook_ref[2], r0, r1, r2, r3);
 }
 
 static int scale_one2_hook(float s0, float s1, int r0, int r1, int r2) {
-	s0 *= SCALE_W;
-	s1 *= SCALE_H;
+	s0 *= SCALE_X;
+	s1 *= SCALE_Y;
 	return TAI_NEXT(scale_one2_hook, hook_ref[3], s0, s1, r0, r1, r2);
 }
 
 static int scale_four1_hook(float x, float y, float w, float h, float s4, int r0, int r1) {
 	if (FEQF(x, 0.0) && FEQF(y, 0.0) && FEQF(w, 1280.0 / 960.0) && FEQF(h, 720.0 / 544.0)) {
 		LOG("scale_four1 prescaled\n");
-		goto done;
+	} else {
+		x *= SCALE_X;
+		y *= SCALE_Y;
+		w *= SCALE_X;
+		h *= SCALE_Y;
 	}
-	x *= SCALE_W;
-	y *= SCALE_H;
-	w *= SCALE_W;
-	h *= SCALE_H;
-done:
 	return TAI_NEXT(scale_four1_hook, hook_ref[4], x, y, w, h, s4, r0, r1);
 }
 
 static int scale_four2_hook(float x, float y, float w, float h, int r0, int r1) {
 	if (FEQF(x, 0.0) && FEQF(y, 0.0) && FEQF(w, 1280.0 / 960.0) && FEQF(h, 720.0 / 544.0)) {
 		LOG("scale_four2 prescaled\n");
-		goto done;
+	} else {
+		x *= SCALE_X;
+		y *= SCALE_Y;
+		w *= SCALE_X;
+		h *= SCALE_Y;
 	}
-	x *= SCALE_W;
-	y *= SCALE_H;
-	w *= SCALE_W;
-	h *= SCALE_H;
-done:
 	return TAI_NEXT(scale_four2_hook, hook_ref[5], x, y, w, h, r0, r1);
 }
 
@@ -213,31 +212,33 @@ int module_start(SceSize argc, const void *argv) { (void)argc; (void)argv;
 
 	tai_module_info_t minfo;
 	minfo.size = sizeof(minfo);
-	GLZ(taiGetModuleInfo("xrd758_psp2", &minfo));
+	GLZ(taiGetModuleInfo(CFB_MOD_NAME, &minfo));
 
 	if (minfo.module_nid != 0x193F08A5) {
 		LOG("Module nid mismatched\n");
 		goto fail;
 	}
 
+	SceUID cfb_modid = minfo.modid;
+
 	// 3D offscreen buffer
 
 	// mov.w r5, #1280 (width)
-	GLZ(INJECT_DATA(0, minfo.modid, 0, 0x000BBE98, "\x40\xF2\x00\x55", 4));
+	GLZ(INJECT_DATA(0, cfb_modid, 0, 0x0BBE98, "\x40\xF2\x00\x55", 4));
 	// mov.w r6, #720 (height)
-	GLZ(INJECT_DATA(1, minfo.modid, 0, 0x000BBEA0, "\x40\xF2\xD0\x26", 4));
+	GLZ(INJECT_DATA(1, cfb_modid, 0, 0x0BBEA0, "\x40\xF2\xD0\x26", 4));
 
 	// main/UI buffer
 
 	// mov.w r0, #1280 (width)
-	GLZ(INJECT_DATA(2, minfo.modid, 0, 0x000BBE7A, "\x40\xF2\x00\x50", 4));
+	GLZ(INJECT_DATA(2, cfb_modid, 0, 0x0BBE7A, "\x40\xF2\x00\x50", 4));
 	// mov.w r0, #720 (height)
-	GLZ(INJECT_DATA(3, minfo.modid, 0, 0x000BBE82, "\x40\xF2\xD0\x20", 4));
+	GLZ(INJECT_DATA(3, cfb_modid, 0, 0x0BBE82, "\x40\xF2\xD0\x20", 4));
 	// mov.w r1, #1280 (pitch)
-	GLZ(INJECT_DATA(4, minfo.modid, 0, 0x00345E64, "\x40\xF2\x00\x51", 4));
+	GLZ(INJECT_DATA(4, cfb_modid, 0, 0x345E64, "\x40\xF2\x00\x51", 4));
 	// mov.w r14, #1280 (width)
 	// mov.w r12, #720 (height)
-	GLZ(INJECT_DATA(5, minfo.modid, 0, 0x00345E6A, "\x40\xF2\x00\x5E\x40\xF2\xD0\x2C", 8));
+	GLZ(INJECT_DATA(5, cfb_modid, 0, 0x345E6A, "\x40\xF2\x00\x5E\x40\xF2\xD0\x2C", 8));
 
 	// scale_loop1 0x8109c4f6 - multiply by 1280, 720
 
@@ -245,14 +246,14 @@ int module_start(SceSize argc, const void *argv) { (void)argc; (void)argv;
 	// movw r3, #720
 	// nop x 6
 	// vmov s0, r12
-	GLZ(INJECT_DATA(6, minfo.modid, 0, 0x9c506,
+	GLZ(INJECT_DATA(6, cfb_modid, 0, 0x9C506,
 		"\x40\xf2\x00\x5c"
 		"\x40\xf2\xd0\x23"
 		"\x00\xbf\x00\xbf\x00\xbf\x00\xbf\x00\xbf\x00\xbf"
 		"\x00\xee\x10\xca", 24));
 	// nop
 	// vmov s0, r3
-	GLZ(INJECT_DATA(7, minfo.modid, 0, 0x9c532,
+	GLZ(INJECT_DATA(7, cfb_modid, 0, 0x9C532,
 		"\x00\xbf"
 		"\x00\xee\x10\x3a", 6));
 
@@ -262,29 +263,29 @@ int module_start(SceSize argc, const void *argv) { (void)argc; (void)argv;
 	// movw r0, #720
 	// nop x 5
 	// vmov s0, r3
-	GLZ(INJECT_DATA(8, minfo.modid, 0, 0x9c566,
+	GLZ(INJECT_DATA(8, cfb_modid, 0, 0x9C566,
 		"\x40\xf2\x00\x53"
 		"\x40\xf2\xd0\x20"
 		"\x00\xbf\x00\xbf\x00\xbf\x00\xbf\x00\xbf"
 		"\x00\xee\x10\x3a", 22));
 	// nop
 	// vmov s0, r0
-	GLZ(INJECT_DATA(9, minfo.modid, 0, 0x9c58e,
+	GLZ(INJECT_DATA(9, cfb_modid, 0, 0x9C58E,
 		"\x00\xbf"
 		"\x00\xee\x10\x0a", 6));
 
-	GLZ(HOOK_IMPORT(0, "xrd758_psp2", 0x37FE725A, 0xB9D5EBDE, sceKernelAllocMemBlock));
-	GLZ(HOOK_IMPORT(1, "xrd758_psp2", 0xF76B66BD, 0xB0F1E4EC, sceGxmInitialize));
+	GLZ(HOOK_IMPORT(0, CFB_MOD_NAME, 0x37FE725A, 0xB9D5EBDE, sceKernelAllocMemBlock));
+	GLZ(HOOK_IMPORT(1, CFB_MOD_NAME, 0xF76B66BD, 0xB0F1E4EC, sceGxmInitialize));
 
-	GLZ(HOOK_OFFSET(2, minfo.modid, 0x9c43a, scale_one1));
-	GLZ(HOOK_OFFSET(3, minfo.modid, 0x9c49c, scale_one2));
-	GLZ(HOOK_OFFSET(4, minfo.modid, 0x9c5bc, scale_four1));
-	GLZ(HOOK_OFFSET(5, minfo.modid, 0x9c688, scale_four2));
+	GLZ(HOOK_OFFSET(2, cfb_modid, 0x9C43A, scale_one1));
+	GLZ(HOOK_OFFSET(3, cfb_modid, 0x9C49C, scale_one2));
+	GLZ(HOOK_OFFSET(4, cfb_modid, 0x9C5BC, scale_four1));
+	GLZ(HOOK_OFFSET(5, cfb_modid, 0x9C688, scale_four2));
 
 	fnblit_set_font(font_sfn);
 	fnblit_set_fg(0xFFFFFFFF);
 	fnblit_set_bg(0x00000000);
-	GLZ(HOOK_IMPORT(6, "xrd758_psp2", 0x4FAACD11, 0x7A410B64, sceDisplaySetFrameBuf));
+	GLZ(HOOK_IMPORT(6, CFB_MOD_NAME, 0x4FAACD11, 0x7A410B64, sceDisplaySetFrameBuf));
 
 	return SCE_KERNEL_START_SUCCESS;
 

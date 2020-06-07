@@ -29,10 +29,6 @@ project(catherinefbhd LANGUAGES C)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -O3 -std=gnu99 -Wdouble-promotion -fsingle-precision-constant")
 
-if(LOG_PRINTF)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLOG_PRINTF")
-endif()
-
 # build font
 set(FONT_BASE "terminus-font-4.48")
 set(FONT_FILE "ter-u28b.bdf")
@@ -70,6 +66,10 @@ set(SELF "${PROJECT_NAME}.suprx")
 add_executable("${ELF}"
   main.c
 )
+
+if(LOG_PRINTF)
+  target_compile_definitions("${ELF}" PRIVATE LOG_PRINTF)
+endif()
 
 target_link_options("${ELF}"
   PRIVATE -nostdlib
