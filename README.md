@@ -1,6 +1,6 @@
 # Catherine Full Body HD Patch
 
-[Download binary](https://forum.devchroma.nl/index.php/topic,154.0.html) | [Source code](https://git.shotatoshounenwachigau.moe/vita/catherinefbhd/)
+[Download binary](https://forum.devchroma.nl/index.php/topic,154.0.html) | [Report bugs](https://github.com/cuevavirus/hdpatch/issues) | [Source code](https://git.shotatoshounenwachigau.moe/vita/catherinefbhd/)
 
 This patch changes the 3D render and framebuffer resolutions of Catherine Full Body on the Vita and PSTV to 1280x720. 1280x720 can be output to HDMI or USB ([udcd-uvc](https://github.com/xerpi/vita-udcd-uvc)), or Vita users can enjoy a supersampled image directly on the screen.
 
