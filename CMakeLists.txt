@@ -83,7 +83,6 @@ target_link_libraries("${ELF}"
   "${SFN_OBJ}"
   fnblit
   gcc
-  m
   SceLibKernel_stub
   taihen_stub
 )

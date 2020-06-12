@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <math.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
@@ -39,8 +38,6 @@ extern int font_sfn_len;
 
 #define SCALE_X (1280.0 / 960.0)
 #define SCALE_Y (720.0 / 540.0)
-
-#define FEQF(a, b) (fabsf((a) - (b)) < 0.00005)
 
 #define GLZ(x) do {\
 	if ((x) < 0) { goto fail; }\
@@ -141,8 +138,8 @@ static int scale_one2_hook(float s0, float s1, int r0, int r1, int r2) {
 }
 
 static int scale_four1_hook(float x, float y, float w, float h, float s4, int r0, int r1) {
-	if (FEQF(x, 0.0) && FEQF(y, 0.0) && FEQF(w, 1280.0 / 960.0) && FEQF(h, 720.0 / 544.0)) {
-		LOG("scale_four1 prescaled\n");
+	if (x == 0.0 && y == 0.0 && w == 1280.0 / 960.0 && h == 720.0 / 544.0) {
+		// LOG("scale_four1 prescaled\n");
 	} else {
 		x *= SCALE_X;
 		y *= SCALE_Y;
@@ -153,8 +150,8 @@ static int scale_four1_hook(float x, float y, float w, float h, float s4, int r0
 }
 
 static int scale_four2_hook(float x, float y, float w, float h, int r0, int r1) {
-	if (FEQF(x, 0.0) && FEQF(y, 0.0) && FEQF(w, 1280.0 / 960.0) && FEQF(h, 720.0 / 544.0)) {
-		LOG("scale_four2 prescaled\n");
+	if (x == 0.0 && y == 0.0 && w == 1280.0 / 960.0 && h == 720.0 / 544.0) {
+		// LOG("scale_four2 prescaled\n");
 	} else {
 		x *= SCALE_X;
 		y *= SCALE_Y;
