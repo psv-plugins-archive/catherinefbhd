@@ -11,7 +11,7 @@ Preview images: [1](https://git.shotatoshounenwachigau.moe/vita/catherinefbhd/pl
 1. Install Catherine Full Body (PCSG01179) and update to 1.03.
 2. Optionally install [froid_san's English patch](https://forum.devchroma.nl/index.php/topic,133.0.html).
 3. Install the latest version of [Sharpscale](https://forum.devchroma.nl/index.php/topic,112.0.html) and the configuration app.
-4. Turn on "Enable Full HD" in the Sharpscale configuration app.
+4. Turn on "Unlock framebuffer size" in the Sharpscale configuration app.
 5. Install `catherinefbhd.suprx` under `*PCSG01179` of your taiHEN config.
 
 ```
