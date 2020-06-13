@@ -56,7 +56,7 @@ static void LOG(const char *fmt, ...) {
 	#endif
 }
 
-#define N_INJECT 10
+#define N_INJECT 11
 static SceUID inject_id[N_INJECT];
 
 #define N_HOOK 7
@@ -270,6 +270,14 @@ int module_start(SceSize argc, const void *argv) { (void)argc; (void)argv;
 	GLZ(INJECT_DATA(9, cfb_modid, 0, 0x9C58E,
 		"\x00\xbf"
 		"\x00\xee\x10\x0a", 6));
+
+	// scale title logos
+
+	// movt r0, #0x44a0
+	// movt r1, #0x4434
+	GLZ(INJECT_DATA(10, cfb_modid, 0, 0x2E7CAA, "\xc4\xf2\xa0\x40\xc4\xf2\x34\x41", 8));
+
+	// hooks
 
 	GLZ(HOOK_IMPORT(0, CFB_MOD_NAME, 0x37FE725A, 0xB9D5EBDE, sceKernelAllocMemBlock));
 	GLZ(HOOK_IMPORT(1, CFB_MOD_NAME, 0xF76B66BD, 0xB0F1E4EC, sceGxmInitialize));
