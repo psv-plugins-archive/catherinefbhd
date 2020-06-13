@@ -84,6 +84,7 @@ target_link_libraries("${ELF}"
   fnblit
   gcc
   SceLibKernel_stub
+  SceSysmem_stub
   taihen_stub
 )
 

@@ -113,7 +113,14 @@ static SceUID sceKernelAllocMemBlock_hook(char *name, int type, int size, void *
 		moved++;
 		LOG("moved %d KB from cdram to phycont\n", size / 1024);
 	}
-	LOG("allocate %08X %08X (%d KB) %s\n", type, size, size / 1024, name);
+	// LOG("allocate %08X %08X (%d KB) %s\n", type, size, size / 1024, name);
+
+	SceKernelFreeMemorySizeInfo info;
+	info.size = sizeof(info);
+	sceKernelGetFreeMemorySize(&info);
+	// LOG("main %d cdram %d phycont %d\n",
+	// 	info.size_user / 1024, info.size_cdram / 1024, info.size_phycont / 1024);
+
 	return TAI_NEXT(sceKernelAllocMemBlock_hook, hook_ref[0], name, type, size, opt);
 }
 
