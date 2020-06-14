@@ -75,6 +75,12 @@ if(LOG_PRINTF)
   target_compile_definitions("${ELF}" PRIVATE LOG_PRINTF)
 endif()
 
+if(PATCH_MODE)
+  target_compile_definitions("${ELF}" PRIVATE PATCH_MODE=${PATCH_MODE})
+else()
+  target_compile_definitions("${ELF}" PRIVATE PATCH_MODE=0)
+endif()
+
 target_link_options("${ELF}"
   PRIVATE -nostdlib
 )
