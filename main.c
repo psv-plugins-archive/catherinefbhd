@@ -210,21 +210,19 @@ static int sceDisplaySetFrameBuf_hook(SceDisplayFrameBuf *fb, int mode) {
 			fb->height = 544;
 			fnblit_printf(0, 0, "Catherine Full Body HD Patch failed: 1280x720");
 			fnblit_printf(0, 28, "Install Sharpscale and turn on 'Enable Full HD'");
-		} else {
+		} else if (sceKernelGetProcessTimeLow() - start_time < 15 * 1000 * 1000) {
 			fnblit_printf(0, 0, "Catherine Full Body HD Patch success: 1280x720");
 		}
 #elif PATCH_MODE == MODE_544
-		fnblit_printf(0, 0, "Catherine Full Body HD Patch success: 960x544 MSAA 4x");
+		if (sceKernelGetProcessTimeLow() - start_time < 15 * 1000 * 1000) {
+			fnblit_printf(0, 0, "Catherine Full Body HD Patch success: 960x544 MSAA 4x");
+		}
 #endif
 
 	}
 
 	int ret = TAI_NEXT(sceDisplaySetFrameBuf_hook, hook_ref[6], fb, mode);
 	failed = failed || ret < 0;
-
-	if (!failed && sceKernelGetProcessTimeLow() - start_time > 15 * 1000 * 1000) {
-		UNHOOK(6);
-	}
 
 	return ret;
 }
