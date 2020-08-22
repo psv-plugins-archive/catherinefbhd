@@ -143,15 +143,21 @@ static SceUID sceKernelAllocMemBlock_hook(char *name, int type, int size, void *
 		SCE_DBG_LOG_INFO("moved %d KB from main to phycont\n", size / 1024);
 #endif
 	}
-	SCE_DBG_LOG_DEBUG("allocate %08X %08X (%d KB) %s\n", type, size, size / 1024, name);
+
+	int ret = TAI_NEXT(sceKernelAllocMemBlock_hook, hook_ref[0], name, type, size, opt);
+	if (ret >= 0) {
+		SCE_DBG_LOG_DEBUG("allocate %08X %08X (%d KB) %s\n", type, size, size / 1024, name);
+	} else {
+		SCE_DBG_LOG_ERROR("allocate %08X %08X (%d KB) %s failed error %08X\n", type, size, size / 1024, name, ret);
+	}
 
 	SceKernelFreeMemorySizeInfo info;
 	info.size = sizeof(info);
 	sceKernelGetFreeMemorySize(&info);
-	SCE_DBG_LOG_DEBUG("main %d cdram %d phycont %d\n",
+	SCE_DBG_LOG_DEBUG("budget main %d KB cdram %d KB phycont %d KB\n",
 		info.size_user / 1024, info.size_cdram / 1024, info.size_phycont / 1024);
 
-	return TAI_NEXT(sceKernelAllocMemBlock_hook, hook_ref[0], name, type, size, opt);
+	return ret;
 }
 
 #if PATCH_MODE == PATCH_720
@@ -225,7 +231,7 @@ static int sceDisplaySetFrameBuf_hook(SceDisplayFrameBuf *fb, int mode) {
 			fb->width = 960;
 			fb->height = 544;
 			fnblit_printf(0, 0, "Catherine Full Body HD Patch failed: 1280x720");
-			fnblit_printf(0, 28, "Install Sharpscale and turn on 'Enable Full HD'");
+			fnblit_printf(0, 28, "Install Sharpscale and turn on 'Unlock framebuffer size'");
 		} else if (show_osd) {
 			fnblit_printf(0, 0, "Catherine Full Body HD Patch success: 1280x720");
 		}
