@@ -3,6 +3,8 @@
 #### v1.2.0
 
 - Add 960x544 MSAA 4x mode
+- Fixed a crash when OSD is removed
+- Updated OSD message
 
 #### v1.1.0
 

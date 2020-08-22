@@ -1,8 +1,6 @@
 # Catherine Full Body HD Patch
 
-[Download binary](https://forum.devchroma.nl/index.php/topic,154.0.html) | [Report bugs](https://github.com/cuevavirus/hdpatch/issues) | [Source code](https://git.shotatoshounenwachigau.moe/vita/catherinefbhd/)
-
-This patch provides two rendering modes for Catherine Full Body on the Vita and PSTV:
+This patch provides two rendering modes for Catherine Full Body on the PlaySation Vita and PlaySation TV:
 
 1. 1280x720
 2. 960x544 MSAA 4x
@@ -26,7 +24,7 @@ If you are using a Vita, you can use [udcd-uvc](https://github.com/xerpi/vita-ud
 
 ## Performance
 
-Overclocking is required for good performance. For 1280x720, the framerate is between 20-30 FPS with 25-30 FPS in gameplay. For 960x544 MSAA 4x, the framerate is 30 FPS.
+Overclocking is required for good performance. For 1280x720, the framerate is between 20-30 FPS with 25-30 FPS in gameplay. For 960x544 MSAA 4x, the framerate is 30 FPS. MSAA does not work in all scenes due to the rendering design of the game.
 
 Video analysis from InquisitionImplied: <https://www.youtube.com/watch?v=uzYS9XtIHiE>
 
@@ -36,13 +34,14 @@ Dependencies:
 
 - [DolceSDK](https://forum.devchroma.nl/index.php/topic,129.0.html)
 - [fnblit and bit2sfn](https://git.shotatoshounenwachigau.moe/vita/fnblit)
+- [psp2dbg](https://git.shotatoshounenwachigau.moe/vita/psp2dbg)
 - [Terminus font](http://terminus-font.sourceforge.net)
 - [taiHEN](https://git.shotatoshounenwachigau.moe/vita/taihen)
 
 Define `PATCH_MODE` when building:
 
-- `0` 1280x720
-- `1` 960x544 MSAA 4x
+- `PATCH_720` 1280x720
+- `PATCH_544_MSAA_4X` 960x544 MSAA 4x
 
 ## Contributing
 
@@ -54,6 +53,8 @@ Use [git-format-patch](https://www.git-scm.com/docs/git-format-patch) or [git-re
 - 3D buffer offsets: [VitaGrafix patchlist](https://github.com/Electry/VitaGrafixPatchlist)
 - Author: 浅倉麗子
 
-## See more
+## See also
 
-CBPS ([forum](https://forum.devchroma.nl/index.php), [discord](https://discordapp.com/invite/2ccAkg3))
+- [Discussion](https://forum.devchroma.nl/index.php/topic,154.0.html)
+- [Source code](https://git.shotatoshounenwachigau.moe/vita/catherinefbhd)
+- [Bug tracker](https://github.com/cuevavirus/hdpatch/issues)
