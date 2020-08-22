@@ -49,6 +49,10 @@ else()
   add_compile_definitions(SCE_DBG_LOG_PREFIX="\\033[0;36m[CatherineFBHD]\\033[0m ")
 endif()
 
+set(PATCH_MODE "PATCH_720" CACHE STRING "Catherine Full Body patch mode")
+
+add_compile_definitions(PATCH_MODE=${PATCH_MODE})
+
 # Build font
 
 set(FONT_BASE "terminus-font-4.48")
@@ -85,12 +89,6 @@ add_executable("${ELF}"
   main.c
   "${SFN_OBJ}"
 )
-
-if(PATCH_MODE)
-  target_compile_definitions("${ELF}" PRIVATE PATCH_MODE=${PATCH_MODE})
-else()
-  target_compile_definitions("${ELF}" PRIVATE PATCH_MODE=0)
-endif()
 
 target_link_libraries("${ELF}"
   fnblit

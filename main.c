@@ -32,14 +32,10 @@ extern char _binary_font_sfn_start[];
 
 #define CFB_MOD_NAME "xrd758_psp2"
 
-#define MODE_720 0
-#define MODE_544 1
+#define PATCH_720         0
+#define PATCH_544_MSAA_4X 1
 
-#if PATCH_MODE == MODE_720
-	#pragma message "Compiling 1280x720"
-#elif PATCH_MODE == MODE_544
-	#pragma message "Compiling 960x544 MSAA 4x"
-#else
+#if !(PATCH_MODE == PATCH_720 || PATCH_MODE == PATCH_544_MSAA_4X)
 	#pragma GCC error "Invalid PATCH_MODE"
 #endif
 
@@ -135,14 +131,17 @@ static int UNHOOK(int idx) {
 static SceUID sceKernelAllocMemBlock_hook(char *name, int type, int size, void *opt) {
 	static int moved = 0;
 
-#if PATCH_MODE == MODE_720
+#if PATCH_MODE == PATCH_720
 	if (moved < 2 && type == SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW && size == 0x300000) {
-#elif PATCH_MODE == MODE_544
-	if (moved < 1 && type == SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE && size == 0x800000) {
-#endif
 		type = SCE_KERNEL_MEMBLOCK_TYPE_USER_MAIN_PHYCONT_NC_RW;
 		moved++;
 		SCE_DBG_LOG_INFO("moved %d KB from cdram to phycont\n", size / 1024);
+#elif PATCH_MODE == PATCH_544_MSAA_4X
+	if (moved < 1 && type == SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE && size == 0x800000) {
+		type = SCE_KERNEL_MEMBLOCK_TYPE_USER_MAIN_PHYCONT_NC_RW;
+		moved++;
+		SCE_DBG_LOG_INFO("moved %d KB from main to phycont\n", size / 1024);
+#endif
 	}
 	SCE_DBG_LOG_DEBUG("allocate %08X %08X (%d KB) %s\n", type, size, size / 1024, name);
 
@@ -155,7 +154,7 @@ static SceUID sceKernelAllocMemBlock_hook(char *name, int type, int size, void *
 	return TAI_NEXT(sceKernelAllocMemBlock_hook, hook_ref[0], name, type, size, opt);
 }
 
-#if PATCH_MODE == MODE_720
+#if PATCH_MODE == PATCH_720
 
 static int sceGxmInitialize_hook(SceGxmInitializeParams *params) {
 	SCE_DBG_LOG_INFO("parameter buffer reduced %d KB -> %d KB\n",
@@ -201,7 +200,7 @@ static int scale_four2_hook(float x, float y, float w, float h, int r0, int r1) 
 	return TAI_NEXT(scale_four2_hook, hook_ref[5], x, y, w, h, r0, r1);
 }
 
-#elif PATCH_MODE == MODE_544
+#elif PATCH_MODE == PATCH_544_MSAA_4X
 
 static int graphics_init_hook(void *r0) {
 	*(int*)(r0 + 0x20 + 0x4 * 0x4) = SCE_GXM_MULTISAMPLE_4X;
@@ -219,7 +218,7 @@ static int sceDisplaySetFrameBuf_hook(SceDisplayFrameBuf *fb, int mode) {
 	if (fb && fb->base) {
 		fnblit_set_fb(fb->base, fb->pitch, fb->width, fb->height);
 
-#if PATCH_MODE == MODE_720
+#if PATCH_MODE == PATCH_720
 		if (failed) {
 			fb->width = 960;
 			fb->height = 544;
@@ -228,7 +227,7 @@ static int sceDisplaySetFrameBuf_hook(SceDisplayFrameBuf *fb, int mode) {
 		} else if (sceKernelGetProcessTimeLow() - start_time < 15 * 1000 * 1000) {
 			fnblit_printf(0, 0, "Catherine Full Body HD Patch success: 1280x720");
 		}
-#elif PATCH_MODE == MODE_544
+#elif PATCH_MODE == PATCH_544_MSAA_4X
 		if (sceKernelGetProcessTimeLow() - start_time < 15 * 1000 * 1000) {
 			fnblit_printf(0, 0, "Catherine Full Body HD Patch success: 960x544 MSAA 4x");
 		}
@@ -273,10 +272,10 @@ USED int module_start(UNUSED SceSize args, UNUSED const void *argp) {
 
 	char *width_patch, *height_patch;
 
-#if PATCH_MODE == MODE_720
+#if PATCH_MODE == PATCH_720
 	width_patch = "\x40\xF2\x00\x55"; // mov.w r5, #1280
 	height_patch = "\x40\xF2\xD0\x26"; // mov.w r6, #720
-#elif PATCH_MODE == MODE_544
+#elif PATCH_MODE == PATCH_544_MSAA_4X
 	width_patch = "\x4f\xf4\x70\x75"; // mov.w r5, #960
 	height_patch = "\x4f\xf4\x08\x76"; // mov.w r6, #544
 #endif
@@ -286,7 +285,7 @@ USED int module_start(UNUSED SceSize args, UNUSED const void *argp) {
 
 	// main/UI buffer
 
-#if PATCH_MODE == MODE_720
+#if PATCH_MODE == PATCH_720
 	// mov.w r0, #1280 (width)
 	GLZ(INJECT_DATA(2, cfb_modid, 0, 0x0BBE7A, "\x40\xF2\x00\x50", 4));
 	// mov.w r0, #720 (height)
@@ -347,13 +346,13 @@ USED int module_start(UNUSED SceSize args, UNUSED const void *argp) {
 
 	GLZ(HOOK_IMPORT(0, CFB_MOD_NAME, 0x37FE725A, 0xB9D5EBDE, sceKernelAllocMemBlock));
 
-#if PATCH_MODE == MODE_720
+#if PATCH_MODE == PATCH_720
 	GLZ(HOOK_IMPORT(1, CFB_MOD_NAME, 0xF76B66BD, 0xB0F1E4EC, sceGxmInitialize));
 #endif
 
 	// multisample antialiasing
 
-#if PATCH_MODE == MODE_544
+#if PATCH_MODE == PATCH_544_MSAA_4X
 	GLZ(HOOK_OFFSET(7, cfb_modid, 0x2F29C0, graphics_init));
 #endif
 
