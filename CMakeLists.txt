@@ -83,10 +83,10 @@ add_custom_command(OUTPUT "${SFN_OBJ}"
 
 set(ELF "catherinefbhd.elf")
 set(SELF "catherinefbhd.suprx")
-set(VELF_CFG "exports.yml")
+set(MODULE_INFO "catherinefbhd.yml")
 
 add_executable("${ELF}"
-  main.c
+  catherinefbhd.c
   "${SFN_OBJ}"
 )
 
@@ -102,5 +102,5 @@ target_link_libraries("${ELF}"
 
 dolce_create_self("${SELF}"
   "${ELF}"
-  CONFIG "${VELF_CFG}"
+  CONFIG "${MODULE_INFO}"
 )
