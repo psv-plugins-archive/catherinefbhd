@@ -33,6 +33,22 @@ add_link_options(
   --entry=module_start
 )
 
+set(LOG_ENABLE "1" CACHE STRING "Enable logging")
+set(FILELOG_ENABLE "0" CACHE STRING "Enable file logging")
+set(LOG_LEVEL "SCE_DBG_LOG_LEVEL_INFO" CACHE STRING "Log verbosity level")
+
+add_compile_definitions(
+  SCE_DBG_LOGGING_ENABLED=${LOG_ENABLE}
+  SCE_DBG_FILELOG_ENABLED=${FILELOG_ENABLE}
+  SCE_DBG_MINIMUM_LOG_LEVEL=${LOG_LEVEL}
+)
+
+if(FILELOG_ENABLE)
+  add_compile_definitions(SCE_DBG_LOG_PREFIX="[CatherineFBHD] ")
+else()
+  add_compile_definitions(SCE_DBG_LOG_PREFIX="\\033[0;36m[CatherineFBHD]\\033[0m ")
+endif()
+
 # Build font
 
 set(FONT_BASE "terminus-font-4.48")
@@ -70,10 +86,6 @@ add_executable("${ELF}"
   "${SFN_OBJ}"
 )
 
-if(LOG_PRINTF)
-  target_compile_definitions("${ELF}" PRIVATE LOG_PRINTF)
-endif()
-
 if(PATCH_MODE)
   target_compile_definitions("${ELF}" PRIVATE PATCH_MODE=${PATCH_MODE})
 else()
@@ -82,6 +94,7 @@ endif()
 
 target_link_libraries("${ELF}"
   fnblit
+  psp2dbg
 
   taihen_stub
 

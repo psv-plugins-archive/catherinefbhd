@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <stdarg.h>
 #include <stdbool.h>
 
 #include <psp2/display.h>
@@ -26,6 +25,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <psp2/kernel/sysmem.h>
 
 #include <fnblit.h>
+#include <psp2dbg.h>
 #include <taihen.h>
 
 extern char _binary_font_sfn_start[];
@@ -53,19 +53,6 @@ extern char _binary_font_sfn_start[];
 	if ((x) < 0) { goto fail; }\
 } while (0)
 
-__attribute__ ((__format__ (__printf__, 1, 2)))
-static void LOG(const char *fmt, ...) {
-	(void)fmt;
-
-	#ifdef LOG_PRINTF
-	sceClibPrintf("\033[0;36m[CatherineFBHD]\033[0m ");
-	va_list args;
-	va_start(args, fmt);
-	sceClibVprintf(fmt, args);
-	va_end(args);
-	#endif
-}
-
 #define N_INJECT 11
 static SceUID inject_id[N_INJECT];
 
@@ -73,24 +60,41 @@ static SceUID inject_id[N_INJECT];
 static SceUID hook_id[N_HOOK];
 static tai_hook_ref_t hook_ref[N_HOOK];
 
-static SceUID INJECT_DATA(int idx, int mod, int seg, int ofs, void *data, int size) {
-	inject_id[idx] = taiInjectData(mod, seg, ofs, data, size);
-	LOG("Injected %d UID %08X\n", idx, inject_id[idx]);
-	return inject_id[idx];
+static SceUID inject_data(int idx, int mod, int seg, int ofs, void *data, int size) {
+	SceUID ret = taiInjectData(mod, seg, ofs, data, size);
+	if (ret >= 0) {
+		SCE_DBG_LOG_INFO("Injected %d UID %08X\n", idx, ret);
+		inject_id[idx] = ret;
+	} else {
+		SCE_DBG_LOG_ERROR("Failed to inject %d error %08X\n", idx, ret);
+	}
+	return ret;
 }
+#define INJECT_DATA(idx, mod, seg, ofs, data, size)\
+	inject_data(idx, mod, seg, ofs, data, size)
 
 static SceUID hook_import(int idx, char *mod, int libnid, int funcnid, void *func) {
-	hook_id[idx] = taiHookFunctionImport(hook_ref+idx, mod, libnid, funcnid, func);
-	LOG("Hooked %d UID %08X\n", idx, hook_id[idx]);
-	return hook_id[idx];
+	SceUID ret = taiHookFunctionImport(hook_ref+idx, mod, libnid, funcnid, func);
+	if (ret >= 0) {
+		SCE_DBG_LOG_INFO("Hooked %d UID %08X\n", idx, ret);
+		hook_id[idx] = ret;
+	} else {
+		SCE_DBG_LOG_ERROR("Failed to hook %d error %08X\n", idx, ret);
+	}
+	return ret;
 }
 #define HOOK_IMPORT(idx, mod, libnid, funcnid, func)\
 	hook_import(idx, mod, libnid, funcnid, func##_hook)
 
 static SceUID hook_offset(int idx, int mod, int ofs, void *func) {
-	hook_id[idx] = taiHookFunctionOffset(hook_ref+idx, mod, 0, ofs, 1, func);
-	LOG("Hooked %d UID %08X\n", idx, hook_id[idx]);
-	return hook_id[idx];
+	SceUID ret = taiHookFunctionOffset(hook_ref+idx, mod, 0, ofs, 1, func);
+	if (ret >= 0) {
+		SCE_DBG_LOG_INFO("Hooked %d UID %08X\n", idx, ret);
+		hook_id[idx] = ret;
+	} else {
+		SCE_DBG_LOG_ERROR("Failed to hook %d error %08X\n", idx, ret);
+	}
+	return ret;
 }
 #define HOOK_OFFSET(idx, mod, ofs, func)\
 	hook_offset(idx, mod, ofs, func##_hook)
@@ -99,8 +103,14 @@ static int UNINJECT(int idx) {
 	int ret = 0;
 	if (inject_id[idx] >= 0) {
 		ret = taiInjectRelease(inject_id[idx]);
-		LOG("Uninjected %d UID %08X\n", idx, inject_id[idx]);
-		inject_id[idx] = -1;
+		if (ret == 0) {
+			SCE_DBG_LOG_INFO("Uninjected %d UID %08X\n", idx, inject_id[idx]);
+			inject_id[idx] = -1;
+		} else {
+			SCE_DBG_LOG_ERROR("Failed to uninject %d UID %08X error %08X\n", idx, inject_id[idx], ret);
+		}
+	} else {
+		SCE_DBG_LOG_WARNING("Tried to uninject %d but not injected\n", idx);
 	}
 	return ret;
 }
@@ -109,9 +119,15 @@ static int UNHOOK(int idx) {
 	int ret = 0;
 	if (hook_id[idx] >= 0) {
 		ret = taiHookRelease(hook_id[idx], hook_ref[idx]);
-		LOG("Unhooked %d UID %08X\n", idx, hook_id[idx]);
-		hook_id[idx] = -1;
-		hook_ref[idx] = -1;
+		if (ret == 0) {
+			SCE_DBG_LOG_INFO("Unhooked %d UID %08X\n", idx, hook_id[idx]);
+			hook_id[idx] = -1;
+			hook_ref[idx] = -1;
+		} else {
+			SCE_DBG_LOG_ERROR("Failed to unhook %d UID %08X error %08X\n", idx, hook_id[idx], ret);
+		}
+	} else {
+		SCE_DBG_LOG_WARNING("Tried to unhook %d but not hooked\n", idx);
 	}
 	return ret;
 }
@@ -126,15 +142,15 @@ static SceUID sceKernelAllocMemBlock_hook(char *name, int type, int size, void *
 #endif
 		type = SCE_KERNEL_MEMBLOCK_TYPE_USER_MAIN_PHYCONT_NC_RW;
 		moved++;
-		LOG("moved %d KB from cdram to phycont\n", size / 1024);
+		SCE_DBG_LOG_INFO("moved %d KB from cdram to phycont\n", size / 1024);
 	}
-	// LOG("allocate %08X %08X (%d KB) %s\n", type, size, size / 1024, name);
+	SCE_DBG_LOG_DEBUG("allocate %08X %08X (%d KB) %s\n", type, size, size / 1024, name);
 
 	SceKernelFreeMemorySizeInfo info;
 	info.size = sizeof(info);
 	sceKernelGetFreeMemorySize(&info);
-	// LOG("main %d cdram %d phycont %d\n",
-	// 	info.size_user / 1024, info.size_cdram / 1024, info.size_phycont / 1024);
+	SCE_DBG_LOG_DEBUG("main %d cdram %d phycont %d\n",
+		info.size_user / 1024, info.size_cdram / 1024, info.size_phycont / 1024);
 
 	return TAI_NEXT(sceKernelAllocMemBlock_hook, hook_ref[0], name, type, size, opt);
 }
@@ -142,7 +158,7 @@ static SceUID sceKernelAllocMemBlock_hook(char *name, int type, int size, void *
 #if PATCH_MODE == MODE_720
 
 static int sceGxmInitialize_hook(SceGxmInitializeParams *params) {
-	LOG("parameter buffer reduced %d KB -> %d KB\n",
+	SCE_DBG_LOG_INFO("parameter buffer reduced %d KB -> %d KB\n",
 		params->parameterBufferSize / 1024,
 		(params->parameterBufferSize - 0x400000) / 1024);
 	params->parameterBufferSize -= 0x400000;
@@ -163,7 +179,7 @@ static int scale_one2_hook(float s0, float s1, int r0, int r1, int r2) {
 
 static int scale_four1_hook(float x, float y, float w, float h, float s4, int r0, int r1) {
 	if (x == 0.0 && y == 0.0 && w == 1280.0 / 960.0 && h == 720.0 / 544.0) {
-		// LOG("scale_four1 prescaled\n");
+		SCE_DBG_LOG_TRACE("scale_four1 prescaled\n");
 	} else {
 		x *= SCALE_X;
 		y *= SCALE_Y;
@@ -175,7 +191,7 @@ static int scale_four1_hook(float x, float y, float w, float h, float s4, int r0
 
 static int scale_four2_hook(float x, float y, float w, float h, int r0, int r1) {
 	if (x == 0.0 && y == 0.0 && w == 1280.0 / 960.0 && h == 720.0 / 544.0) {
-		// LOG("scale_four2 prescaled\n");
+		SCE_DBG_LOG_TRACE("scale_four2 prescaled\n");
 	} else {
 		x *= SCALE_X;
 		y *= SCALE_Y;
@@ -227,6 +243,7 @@ static int sceDisplaySetFrameBuf_hook(SceDisplayFrameBuf *fb, int mode) {
 }
 
 static void startup(void) {
+	SCE_DBG_FILELOG_INIT("ux0:/catherinefbhd.log");
 	sceClibMemset(inject_id, 0xFF, sizeof(inject_id));
 	sceClibMemset(hook_id, 0xFF, sizeof(hook_id));
 	sceClibMemset(hook_ref, 0xFF, sizeof(hook_ref));
@@ -235,6 +252,7 @@ static void startup(void) {
 static void cleanup(void) {
 	for (int i = 0; i < N_INJECT; i++) { UNINJECT(i); }
 	for (int i = 0; i < N_HOOK; i++) { UNHOOK(i); }
+	SCE_DBG_FILELOG_TERM();
 }
 
 USED int module_start(UNUSED SceSize args, UNUSED const void *argp) {
@@ -245,7 +263,7 @@ USED int module_start(UNUSED SceSize args, UNUSED const void *argp) {
 	GLZ(taiGetModuleInfo(CFB_MOD_NAME, &minfo));
 
 	if (minfo.module_nid != 0x193F08A5) {
-		LOG("Module nid mismatched\n");
+		SCE_DBG_LOG_ERROR("Module nid mismatched\n");
 		goto fail;
 	}
 
@@ -346,9 +364,11 @@ USED int module_start(UNUSED SceSize args, UNUSED const void *argp) {
 	fnblit_set_bg(0x00000000);
 	GLZ(HOOK_IMPORT(6, CFB_MOD_NAME, 0x4FAACD11, 0x7A410B64, sceDisplaySetFrameBuf));
 
+	SCE_DBG_LOG_INFO("module_start success\n");
 	return SCE_KERNEL_START_SUCCESS;
 
 fail:
+	SCE_DBG_LOG_ERROR("module_start failed\n");
 	cleanup();
 	return SCE_KERNEL_START_FAILED;
 }
