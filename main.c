@@ -1,6 +1,6 @@
 /*
 This file is part of Catherine Full Body HD Patch
-Copyright 2020 浅倉麗子
+Copyright © 2020 浅倉麗子
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,22 +17,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <stdarg.h>
 #include <stdbool.h>
-#include <string.h>
+
 #include <psp2/display.h>
 #include <psp2/gxm.h>
 #include <psp2/kernel/clib.h>
 #include <psp2/kernel/modulemgr.h>
 #include <psp2/kernel/processmgr.h>
 #include <psp2/kernel/sysmem.h>
-#include <taihen.h>
+
 #include <fnblit.h>
+#include <taihen.h>
 
-int vsnprintf(char *buf, SceSize n, const char *fmt, va_list arg) {
-	return sceClibVsnprintf(buf, n, fmt, arg);
-}
-
-extern char font_sfn[];
-extern int font_sfn_len;
+extern char _binary_font_sfn_start[];
 
 #define CFB_MOD_NAME "xrd758_psp2"
 
@@ -49,6 +45,9 @@ extern int font_sfn_len;
 
 #define SCALE_X (1280.0 / 960.0)
 #define SCALE_Y (720.0 / 540.0)
+
+#define UNUSED __attribute__ ((unused))
+#define USED __attribute__ ((used))
 
 #define GLZ(x) do {\
 	if ((x) < 0) { goto fail; }\
@@ -238,8 +237,7 @@ static void cleanup(void) {
 	for (int i = 0; i < N_HOOK; i++) { UNHOOK(i); }
 }
 
-int _start() __attribute__ ((weak, alias("module_start")));
-int module_start(SceSize argc, const void *argv) { (void)argc; (void)argv;
+USED int module_start(UNUSED SceSize args, UNUSED const void *argp) {
 	startup();
 
 	tai_module_info_t minfo;
@@ -343,7 +341,7 @@ int module_start(SceSize argc, const void *argv) { (void)argc; (void)argv;
 
 	// on-screen display
 
-	fnblit_set_font(font_sfn);
+	fnblit_set_font(_binary_font_sfn_start);
 	fnblit_set_fg(0xFFFFFFFF);
 	fnblit_set_bg(0x00000000);
 	GLZ(HOOK_IMPORT(6, CFB_MOD_NAME, 0x4FAACD11, 0x7A410B64, sceDisplaySetFrameBuf));
@@ -355,7 +353,7 @@ fail:
 	return SCE_KERNEL_START_FAILED;
 }
 
-int module_stop(SceSize argc, const void *argv) { (void)argc; (void)argv;
+USED int module_stop(UNUSED SceSize args, UNUSED const void *argp) {
 	cleanup();
 	return SCE_KERNEL_STOP_SUCCESS;
 }
