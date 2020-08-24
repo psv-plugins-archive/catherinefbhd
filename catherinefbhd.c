@@ -250,7 +250,7 @@ static int sceDisplaySetFrameBuf_hook(SceDisplayFrameBuf *fb, int mode) {
 }
 
 static void startup(void) {
-	SCE_DBG_FILELOG_INIT("ux0:/catherinefbhd.log");
+	SCE_DBG_FILE_LOGGING_INIT("ux0:/catherinefbhd.log");
 	sceClibMemset(inject_id, 0xFF, sizeof(inject_id));
 	sceClibMemset(hook_id, 0xFF, sizeof(hook_id));
 	sceClibMemset(hook_ref, 0xFF, sizeof(hook_ref));
@@ -259,7 +259,7 @@ static void startup(void) {
 static void cleanup(void) {
 	for (int i = 0; i < N_INJECT; i++) { UNINJECT(i); }
 	for (int i = 0; i < N_HOOK; i++) { UNHOOK(i); }
-	SCE_DBG_FILELOG_TERM();
+	SCE_DBG_FILE_LOGGING_TERM();
 }
 
 USED int module_start(UNUSED SceSize args, UNUSED const void *argp) {
