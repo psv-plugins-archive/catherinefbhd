@@ -45,6 +45,14 @@ Define `PATCH_MODE` when building:
 
 Logging can be configured with CMake variables.
 
+To build dependencies and module:
+
+```sh
+cmake .
+make dep-all
+make
+```
+
 ## Contributing
 
 Use [git-format-patch](https://www.git-scm.com/docs/git-format-patch) or [git-request-pull](https://www.git-scm.com/docs/git-request-pull) and email me at <asakurareiko@protonmail.ch>.
